@@ -1,61 +1,64 @@
-import { Injectable } from '@nestjs/common';
-
-interface User {
-  id: number;
-  name: string;
-  role: 'INTERN' | 'EMPLOYEE' | 'ADMIN';
-}
+import { Injectable } from "@nestjs/common";
+import { CreateUserDto } from "./dto/create-users.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { NotFoundException } from "@nestjs/common";
 
 @Injectable()
 export class UserService {
   private users = [
     {
       id: 1,
-      name: 'John Doe',
-      role: 'EMPLOYEE',
-      email: 'john.doe@example.com',
+      name: "John Doe",
+      role: "EMPLOYEE",
+      email: "john.doe@example.com",
     },
     {
       id: 2,
-      name: 'Jane Smith',
-      role: 'INTERN',
-      email: 'jane.smith@example.com',
+      name: "Jane Smith",
+      role: "INTERN",
+      email: "jane.smith@example.com",
     },
     {
       id: 3,
-      name: 'Alice Johnson',
-      role: 'ADMIN',
-      email: 'alice.johnson@example.com',
+      name: "Alice Johnson",
+      role: "ADMIN",
+      email: "alice.johnson@example.com",
     },
     {
       id: 4,
-      name: 'Bob Brown',
-      role: 'EMPLOYEE',
-      email: 'bob.brown@example.com',
+      name: "Bob Brown",
+      role: "EMPLOYEE",
+      email: "bob.brown@example.com",
     },
     {
       id: 5,
-      name: 'Charlie White',
-      role: 'INTERN',
-      email: 'charlie.white@example.com',
+      name: "Charlie White",
+      role: "INTERN",
+      email: "charlie.white@example.com",
     },
     {
       id: 6,
-      name: 'Diana Green',
-      role: 'ADMIN',
-      email: 'diana.green@example.com',
+      name: "Diana Green",
+      role: "ADMIN",
+      email: "diana.green@example.com",
     },
     {
       id: 7,
-      name: 'Ethan Blue',
-      role: 'EMPLOYEE',
-      email: 'ethan.blue@example.com',
+      name: "Ethan Blue",
+      role: "EMPLOYEE",
+      email: "ethan.blue@example.com",
     },
   ];
 
-  findAll(role?: 'INTERN' | 'EMPLOYEE' | 'ADMIN') {
+  findAll(role?: "INTERN" | "EMPLOYEE" | "ADMIN") {
     if (role) {
-      return this.users.filter((user) => user.role === role);
+      const userArray = this.users.filter((user) => user.role === role);
+
+      if(!userArray.length){
+        throw new NotFoundException(`Invalid role: ${role}`);
+      }
+
+      return userArray;
     }
 
     return this.users;
@@ -65,42 +68,36 @@ export class UserService {
     const user = this.users.find((user) => user.id === id);
 
     if (!user) {
-      return {
-        message: `User with id ${id} not found`,
-        statusCode: 404,
-      };
+  
+      throw new NotFoundException(`User with id ${id} not found`);
     }
 
     return user;
   }
 
-  create(user: {
-    name: string;
-    role: 'INTERN' | 'EMPLOYEE' | 'ADMIN';
-    email: string;
-  }) {
+  create(createUserDto: CreateUserDto) {
     const newUser = {
       id: this.users.length + 1,
-      ...user,
+      ...createUserDto,
     };
 
     this.users.push(newUser);
     return newUser;
   }
 
-  update(id: number, userUpdate: Partial<User>) {
-    const user = this.users.find((user) => user.id === id);
+  update(id: number, userUpdate: UpdateUserDto) {
+    const userIndex = this.users.findIndex((user) => user.id === id);
 
-    if (!user) {
+    if (userIndex === -1) {
       throw new Error(`User with id ${id} not found`);
     }
 
     const updateUserData = {
-      ...user,
+      ...this.users[userIndex],
       ...userUpdate,
     };
 
-    this.users[user.id] = updateUserData;
+    this.users[userIndex] = updateUserData;
 
     return updateUserData;
   }
@@ -109,10 +106,7 @@ export class UserService {
     const userIndex = this.users.findIndex((user) => user.id === id);
 
     if (userIndex === -1) {
-      return {
-        message: `User with id ${id} not found`,
-        statusCode: 404,
-      };
+      throw new NotFoundException(`User with id ${id} not found`);
     }
 
     this.users = this.users.filter((user) => user.id !== id);
